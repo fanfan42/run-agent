@@ -40,7 +40,7 @@ func (agent *Agent) detachNetwork(containerID string, Networks map[string]string
 
 func (agent *Agent) checkSuperNetwork(MasterIP string, NetPasswd string) error {
 	ctx := context.Background()
-	command, err := parseCommandLine("/bin/ps aux")
+	command, err := parseCommandLine("docker ps")
 	if err != nil {
 		return fmt.Errorf("Error parsing command line (checking): %s", err)
 	}
@@ -64,7 +64,8 @@ func (agent *Agent) checkSuperNetwork(MasterIP string, NetPasswd string) error {
 		}
 	}
 
-	if len(MasterIP) > 0 {
+	if len(MasterIP) > 0 && agent.IP != MasterIP {
+		fmt.Println(MasterIP)
 		command2 := "/usr/local/bin/weave status peers"
 		command, err = parseCommandLine(command2)
 		if err != nil {
@@ -134,13 +135,10 @@ func getNewNets(nets map[string]string, containerID string) (map[string]string, 
 		tnets = append(tnets, net)
 	}
 
-	fmt.Println(tnets)
-	fmt.Println(networks[containerID])
 	for _, network := range networks[containerID] {
 		tnets2 = append(tnets2, strings.Split(network, "-")[0])
 	}
 	diff := difference(tnets, tnets2)
-	fmt.Println(diff)
 
 	for _, net := range diff {
 		if stringInSlice(net, tnets2) {
@@ -172,7 +170,6 @@ func (agent *Agent) attachNetwork(containerID string, Networks map[string]string
 		if len(newNets) == 0 {
 			newNets = Networks
 		}
-		fmt.Println(newNets)
 		for network, domain := range newNets {
 			//nets
 			command := fmt.Sprintf("%s attach net:%s %s",

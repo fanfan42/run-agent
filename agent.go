@@ -49,6 +49,7 @@ type Agent struct {
 	Hostname              string            `json:"hostname"`
 	Labels                []string          `json:"labels"`
 	Localtime             int               `json:"localtime"`
+	IP                    string            `json:"ip"`
 	User                  *gopikacloud.User `json:"user"`
 	chRegisterContainer   chan string
 	chDeregisterContainer chan string
@@ -80,6 +81,7 @@ func NewAgent(apiToken string, hostname string, labels []string) *Agent {
 		Client:                NewClient(apiToken),
 		DockerClient:          NewDockerClient(),
 		Labels:                labels,
+		IP:                    "",
 		chRegisterContainer:   make(chan string),
 		chDeregisterContainer: make(chan string),
 		chSyncContainer:       make(chan string),
@@ -115,6 +117,7 @@ func (agent *Agent) Register() error {
 	if status != 200 {
 		return fmt.Errorf("Failed to create agent http code: %d", status)
 	}
+	agent.IP = strings.TrimSpace(string(ip))
 	logger.Printf("Agent %s registered with hostname %s (agent version %s)\n", agent.ID, agent.Hostname, version)
 	return nil
 }
